@@ -71,9 +71,6 @@ func CreateRepoCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			owner, name, orgName := viper.GetString("owner"), viper.GetString("name"), viper.GetString("orgName")
 			_, resp, _ := client.Repositories.Get(context.Background(), owner, name)
-			// ghutil.PrettyPrint(repo)
-			newRepo := repositoryFromCmd(cmd)
-			ghutil.PrettyPrint(newRepo)
 
 			if resp.StatusCode == 404 {
 				newRepo := repositoryFromCmd(cmd)
