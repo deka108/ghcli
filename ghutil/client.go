@@ -11,6 +11,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// MalformedFileError is error when file is malformed
 type MalformedFileError string
 
 func (e MalformedFileError) Error() string { return string(e) }

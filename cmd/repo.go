@@ -70,11 +70,14 @@ func CreateRepoCommand() *cobra.Command {
 		Short: "Create a repository if it does not exist",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			owner, name, orgName := viper.GetString("owner"), viper.GetString("name"), viper.GetString("orgName")
+			client := getGithubClient()
 			_, resp, _ := client.Repositories.Get(context.Background(), owner, name)
-
 			if resp.StatusCode == 404 {
+				authClient, err := getAuthClient()
 				newRepo := repositoryFromCmd(cmd)
-				var err error
+				if err != nil {
+					return err
+				}
 				if orgName != "" {
 					_, _, err = authClient.Repositories.Create(context.Background(), orgName, newRepo)
 				} else {
@@ -84,6 +87,7 @@ func CreateRepoCommand() *cobra.Command {
 					return err
 				}
 			} else {
+				fmt.Printf("%s already exist", name)
 				return fmt.Errorf("repo %s/%s already exist on GitHub", owner, name)
 			}
 			return nil
@@ -94,6 +98,7 @@ func CreateRepoCommand() *cobra.Command {
 		Use:   "get",
 		Short: "Get a repository",
 		Run: func(cmd *cobra.Command, args []string) {
+			client := getGithubClient()
 			repo, _, _ := client.Repositories.Get(context.Background(), viper.GetString("owner"), viper.GetString("name"))
 			ghutil.PrettyPrint(repo)
 		},

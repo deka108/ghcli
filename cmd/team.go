@@ -15,22 +15,93 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/deka108/ghcli/ghutil"
+	"github.com/google/go-github/github"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
-// teamCmd represents the team command
-var teamCmd = &cobra.Command{
-	Use:   "team",
-	Short: "Perform team operations",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+// CreateTeamCommand creates cli for GitHub team command
+func CreateTeamCommand() *cobra.Command {
+	var teamCmd = &cobra.Command{
+		Use:   "team [operations]",
+		Short: "Perform GitHub team actions",
+	}
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("team called")
-	},
+	var listCmd = &cobra.Command{
+		Use:   "list",
+		Short: "List all the available teams",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			client := getGithubClient()
+			teams, _, err := client.Teams.ListTeams(context.Background(), viper.GetString("org"), nil)
+			if err != nil {
+				return err
+			}
+			ghutil.PrettyPrint(teams)
+			return nil
+		},
+	}
+
+	var getTeamFromNameCmd = &cobra.Command{
+		Use:   "getTeamFromName",
+		Short: "Gets the Team of an organization from a team ID",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			client := getGithubClient()
+			teamId := viper.GetInt64("id")
+			var resTeam *github.Team
+			teams, _, err := client.Teams.ListTeams(context.Background(), viper.GetString("org"), nil)
+			if err != nil {
+				return err
+			}
+			for _, team := range teams {
+				if *team.ID == teamId {
+					resTeam = team
+					break
+				}
+			}
+			ghutil.PrettyPrint(resTeam)
+			return nil
+		},
+	}
+
+	var getTeamFromIdCmd = &cobra.Command{
+		Use:   "getTeamFromId",
+		Short: "Gets the Team from a team ID",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			client := getGithubClient()
+			teamId := viper.GetInt64("id")
+			team, resp, err := client.Teams.GetTeam(context.Background(), teamId)
+			if resp.StatusCode == 404 {
+				return fmt.Errorf("teamId: %d doesn't exist", teamId)
+			}
+			if err != nil {
+				return err
+			}
+			ghutil.PrettyPrint(team)
+			return nil
+		},
+	}
+
+	listCmd.Flags().String("org", "", "Organization Name (required)")
+	listCmd.MarkFlagRequired("org")
+	viper.BindPFlags(listCmd.Flags())
+
+	getTeamFromNameCmd.Flags().String("name", "", "Team Name (required)")
+	getTeamFromNameCmd.MarkFlagRequired("name")
+	getTeamFromNameCmd.Flags().String("org", "", "Organization Name (required)")
+	getTeamFromNameCmd.MarkFlagRequired("org")
+	viper.BindPFlags(getTeamFromNameCmd.Flags())
+
+	getTeamFromIdCmd.Flags().Int64("id", -1, "Team ID (required)")
+	getTeamFromIdCmd.MarkFlagRequired("id")
+	viper.BindPFlags(getTeamFromIdCmd.Flags())
+
+	teamCmd.AddCommand(listCmd)
+	teamCmd.AddCommand(getTeamFromIdCmd)
+	teamCmd.AddCommand(getTeamFromNameCmd)
+
+	return teamCmd
 }

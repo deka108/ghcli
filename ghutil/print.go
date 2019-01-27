@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+// PrettyPrint prints a struct in human-readable way
 func PrettyPrint(data interface{}) error {
 	jsonData, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {

@@ -1,0 +1,6 @@
+secrets
+tmp
+vendor
+test
+bin
+Dockerfile

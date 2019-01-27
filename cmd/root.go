@@ -21,19 +21,44 @@ import (
 	"github.com/deka108/ghcli/ghutil"
 	"github.com/google/go-github/github"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
-var authClient, _ = ghutil.NewAuthorizedClientFromEnv()
-var client = github.NewClient(nil)
+// isAuth checks if the current cli operation is authenticated
+func isAuth() bool {
+	return os.Getenv("GITHUB_TOKEN") != "" || viper.GetString("token") != ""
+}
+
+// getAuthClient creates authenticated client from flag or env variable
+func getAuthClient() (*github.Client, error) {
+	if viper.GetString("token") != "" {
+		return ghutil.NewAuthorizedClient(viper.GetString("token")), nil
+	} else if os.Getenv("GITHUB_TOKEN") != "" {
+		return ghutil.NewAuthorizedClient(os.Getenv("GITHUB_TOKEN")), nil
+	}
+	return nil, fmt.Errorf("error: one of the following, --token or GITHUB_TOKEN must be set")
+}
+
+func getGithubClient() *github.Client {
+	if isAuth() {
+		authClient, err := getAuthClient()
+		if err == nil {
+			return authClient
+		}
+	}
+	return github.NewClient(nil)
+}
 
 // CreateGhcliCommand creates the root command for ghcli
 func CreateGhcliCommand() *cobra.Command {
-	repoCmd := CreateRepoCommand()
 	ghcliCmd := &cobra.Command{
 		Use:   "ghcli",
 		Short: "Headless GitHub operations via cli",
 	}
+	repoCmd := CreateRepoCommand()
 	ghcliCmd.AddCommand(repoCmd)
+	teamCmd := CreateTeamCommand()
+	ghcliCmd.AddCommand(teamCmd)
 	return ghcliCmd
 }
 
