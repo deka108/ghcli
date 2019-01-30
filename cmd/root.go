@@ -55,10 +55,12 @@ func CreateGhcliCommand() *cobra.Command {
 		Use:   "ghcli",
 		Short: "Headless GitHub operations via cli",
 	}
+	ghcliCmd.PersistentFlags().String("token", "", "GitHub Access Token. If not supplied, it'll derive from GITHUB_TOKEN environment")
 	repoCmd := CreateRepoCommand()
 	ghcliCmd.AddCommand(repoCmd)
 	teamCmd := CreateTeamCommand()
 	ghcliCmd.AddCommand(teamCmd)
+
 	return ghcliCmd
 }
 

@@ -42,12 +42,13 @@ func repositoryFromCmd(cmd *cobra.Command) *github.Repository {
 	flags := cmd.Flags()
 	for _, flagItem := range createRepoFlagItems {
 		field := flagItem.field
+		scField := ghutil.ToSnakeCase(field)
 		if flagItem.optional {
 			if flags.Changed(field) {
-				data[field] = viper.Get(field)
+				data[scField] = viper.Get(field)
 			}
 		} else {
-			data[field] = viper.Get(field)
+			data[scField] = viper.Get(field)
 		}
 	}
 	jsonStr, _ := json.Marshal(data)
@@ -68,6 +69,9 @@ func CreateRepoCommand() *cobra.Command {
 	var createRepoCmd = &cobra.Command{
 		Use:   "create",
 		Short: "Create a repository if it does not exist",
+		PreRun: func(cmd *cobra.Command, args []string) {
+			viper.BindPFlags(cmd.Flags())
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			owner, name, orgName := viper.GetString("owner"), viper.GetString("name"), viper.GetString("orgName")
 			client := getGithubClient()
@@ -86,6 +90,7 @@ func CreateRepoCommand() *cobra.Command {
 				if err != nil {
 					return err
 				}
+				fmt.Printf("Repository %s is successfully created\n", name)
 			} else {
 				fmt.Printf("%s already exist", name)
 				return fmt.Errorf("repo %s/%s already exist on GitHub", owner, name)
@@ -97,6 +102,9 @@ func CreateRepoCommand() *cobra.Command {
 	var getRepoCmd = &cobra.Command{
 		Use:   "get",
 		Short: "Get a repository",
+		PreRun: func(cmd *cobra.Command, args []string) {
+			viper.BindPFlags(cmd.Flags())
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 			client := getGithubClient()
 			repo, _, _ := client.Repositories.Get(context.Background(), viper.GetString("owner"), viper.GetString("name"))
@@ -104,10 +112,23 @@ func CreateRepoCommand() *cobra.Command {
 		},
 	}
 
+	// var addCollaboratorCmd = &cobra.Command{
+	// 	Use:   "addCollaborator",
+	// 	Short: "Adds user as collaborator to repository",
+	// 	PreRun: func(cmd *cobra.Command, args []string) {
+	// 		viper.BindPFlags(cmd.Flags())
+	// 	},
+	// 	Run: func(cmd *cobra.Command, args []string) {
+	// 		// client := getGithubClient()
+	// 		// repo, _, _ := client.Repositories.AddCollaborator(context.Background(),
+	// 		// 	viper.GetString("owner"), viper.GetString("repo"), viper.GetString("user"))
+	// 		// ghutil.PrettyPrint(repo)
+	// 	},
+	// }
+
 	// Common repo flags
 	repoCmd.PersistentFlags().String("name", "", "Repo Name (Required)")
 	repoCmd.PersistentFlags().String("owner", "", "Repo's Owner (Required)")
-	repoCmd.PersistentFlags().String("token", "", "GitHub Access Token. If not supplied, it'll derive from GITHUB_TOKEN environment")
 	repoCmd.MarkPersistentFlagRequired("name")
 	repoCmd.MarkPersistentFlagRequired("owner")
 
@@ -116,13 +137,15 @@ func CreateRepoCommand() *cobra.Command {
 	createRepoCmd.PersistentFlags().String("gitignoreTemplate", "", "Gitignore template")
 	createRepoCmd.PersistentFlags().Int("teamId", -1, "Team ID")
 	createRepoCmd.PersistentFlags().Bool("private", false, "Option to indicate if repo is private")
-	createRepoCmd.PersistentFlags().Bool("autoInit", false, "Option to Autoinit repo")
+	createRepoCmd.PersistentFlags().Bool("autoInit", false, "Option to autoinit repo")
 	createRepoCmd.PersistentFlags().String("orgName", "", "Add organization name for the repo (optional)")
+
+	// addCollaboratorCmd.Flags().String("user", "", "GitHub username")
+	// addCollaboratorCmd.MarkFlagRequired("user")
 
 	repoCmd.AddCommand(createRepoCmd)
 	repoCmd.AddCommand(getRepoCmd)
-
-	viper.BindPFlags(repoCmd.PersistentFlags())
+	// repoCmd.AddCommand(addCollaboratorCmd)
 
 	return repoCmd
 }

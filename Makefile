@@ -10,7 +10,7 @@ test-cmd-repo:
 	@cd cmd && go test -v -run .*Repo.*
 
 test-cmd-team:
-	@cd cmd && go test -v -run .*Team.*Id.*
+	@cd cmd && go test -v -run .*AddTeam.*
 
 build:
 	@go build -o bin/ghcli
@@ -23,3 +23,6 @@ run-main:
 
 docker-image:
 	@docker build -t deka108/ghcli .
+
+export-env:
+	@export $(cat .env | xargs) 

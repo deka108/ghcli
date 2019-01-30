@@ -34,8 +34,8 @@ func TestCreateRepo_Success(t *testing.T) {
 	t.Skip()
 	// Mock these results
 	testCases := []CliTestCase{
-		{[]string{"repo", "create", "--name", "ghcli", "--owner", "deka108"}, true, false},        // Repo already exist
-		{[]string{"repo", "create", "--name", "new-repo-cli", "--owner", "deka108"}, false, true}, // Repo not exist, will be created
+		// {[]string{"repo", "create", "--name", "ghcli", "--owner", "deka108"}, true, false},        // Repo already exist
+		// {[]string{"repo", "create", "--name", "new-repo-cli", "--owner", "deka108"}, false, true}, // Repo not exist, will be created
 	}
 	testCliCommand(t, testCases)
 }
@@ -50,6 +50,7 @@ func TestGetRepo(t *testing.T) {
 }
 
 func TestGetRepo_Success(t *testing.T) {
+	t.Skip()
 	testCases := []CliTestCase{
 		{[]string{"repo", "get", "--name", "ghcli", "--owner", "deka108"}, false, false}, // Repo exist
 	}

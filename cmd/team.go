@@ -34,6 +34,9 @@ func CreateTeamCommand() *cobra.Command {
 	var listCmd = &cobra.Command{
 		Use:   "list",
 		Short: "List all the available teams",
+		PreRun: func(cmd *cobra.Command, args []string) {
+			viper.BindPFlags(cmd.Flags())
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client := getGithubClient()
 			teams, _, err := client.Teams.ListTeams(context.Background(), viper.GetString("org"), nil)
@@ -47,17 +50,20 @@ func CreateTeamCommand() *cobra.Command {
 
 	var getTeamFromNameCmd = &cobra.Command{
 		Use:   "getTeamFromName",
-		Short: "Gets the Team of an organization from a team ID",
+		Short: "Gets the Team of an organization from a team name",
+		PreRun: func(cmd *cobra.Command, args []string) {
+			viper.BindPFlags(cmd.Flags())
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client := getGithubClient()
-			teamId := viper.GetInt64("id")
+			teamName := viper.GetString("name")
 			var resTeam *github.Team
 			teams, _, err := client.Teams.ListTeams(context.Background(), viper.GetString("org"), nil)
 			if err != nil {
 				return err
 			}
 			for _, team := range teams {
-				if *team.ID == teamId {
+				if *team.Name == teamName {
 					resTeam = team
 					break
 				}
@@ -70,6 +76,9 @@ func CreateTeamCommand() *cobra.Command {
 	var getTeamFromIdCmd = &cobra.Command{
 		Use:   "getTeamFromId",
 		Short: "Gets the Team from a team ID",
+		PreRun: func(cmd *cobra.Command, args []string) {
+			viper.BindPFlags(cmd.Flags())
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client := getGithubClient()
 			teamId := viper.GetInt64("id")
@@ -85,23 +94,53 @@ func CreateTeamCommand() *cobra.Command {
 		},
 	}
 
+	var addTeamRepoCmd = &cobra.Command{
+		Use:   "addTeamRepo",
+		Short: "Add team's repository",
+		PreRun: func(cmd *cobra.Command, args []string) {
+			viper.BindPFlags(cmd.Flags())
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			client := getGithubClient()
+			teamID, owner, repo := viper.GetInt64("id"), viper.GetString("owner"), viper.GetString("repo")
+			opt := &github.TeamAddTeamRepoOptions{Permission: viper.GetString("permission")}
+			resp, err := client.Teams.AddTeamRepo(context.Background(), teamID, owner, repo, opt)
+			if err != nil {
+				return err
+			}
+			if resp.StatusCode == 404 {
+				return fmt.Errorf("teamId: %d doesn't exist", teamID)
+			}
+			if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
+				fmt.Printf("Adding repo %s to team is successful!\n", repo)
+			}
+			return nil
+		},
+	}
+
 	listCmd.Flags().String("org", "", "Organization Name (required)")
 	listCmd.MarkFlagRequired("org")
-	viper.BindPFlags(listCmd.Flags())
 
 	getTeamFromNameCmd.Flags().String("name", "", "Team Name (required)")
 	getTeamFromNameCmd.MarkFlagRequired("name")
 	getTeamFromNameCmd.Flags().String("org", "", "Organization Name (required)")
 	getTeamFromNameCmd.MarkFlagRequired("org")
-	viper.BindPFlags(getTeamFromNameCmd.Flags())
 
 	getTeamFromIdCmd.Flags().Int64("id", -1, "Team ID (required)")
 	getTeamFromIdCmd.MarkFlagRequired("id")
-	viper.BindPFlags(getTeamFromIdCmd.Flags())
+
+	addTeamRepoCmd.Flags().Int64("id", -1, "Team ID (required)")
+	addTeamRepoCmd.MarkFlagRequired("id")
+	addTeamRepoCmd.Flags().String("owner", "", "Owner (required)")
+	addTeamRepoCmd.MarkFlagRequired("owner")
+	addTeamRepoCmd.Flags().String("repo", "", "Repo (required)")
+	addTeamRepoCmd.MarkFlagRequired("repo")
+	addTeamRepoCmd.Flags().String("permission", "push", "Team's Repo Permission. Allowed values: push,admin,read")
 
 	teamCmd.AddCommand(listCmd)
 	teamCmd.AddCommand(getTeamFromIdCmd)
 	teamCmd.AddCommand(getTeamFromNameCmd)
+	teamCmd.AddCommand(addTeamRepoCmd)
 
 	return teamCmd
 }
