@@ -49,8 +49,8 @@ This CLI will provide the following action items:
 - [x] Get GitHub Repository (Public, Private, Organization)
 - [x] Creation of GitHub Repository (Public, Private, Organization)
 - [x] Teams Listing, Gets a Team from Name
-- [ ] Adding members to a GitHub Repository
-- [ ] Adding a GitHub Repository to a team or vice versa
+- [x] Adding members to a GitHub Repository
+- [x] Adding a GitHub Repository to a team or vice versa
 - [ ] Use unit tests + mocking the unit tests instead of integration tests
 
 These are tasks that I need, will be added as I require more. Add unit tests + mock instead of integration tests
