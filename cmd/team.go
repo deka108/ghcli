@@ -112,7 +112,7 @@ func CreateTeamCommand() *cobra.Command {
 				return fmt.Errorf("teamId: %d doesn't exist", teamID)
 			}
 			if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
-				fmt.Printf("Adding repo %s to team is successful!\n", repo)
+				fmt.Printf("Updating team's access to repo %s is successful!\n", repo)
 			}
 			return nil
 		},

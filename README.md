@@ -51,9 +51,10 @@ This CLI will provide the following action items:
 - [x] Teams Listing, Gets a Team from Name
 - [x] Adding members to a GitHub Repository
 - [x] Adding a GitHub Repository to a team or vice versa
-- [ ] Use unit tests + mocking the unit tests instead of integration tests
+- [x] Use tests
+- [ ] Mocking the unit tests instead of integration tests
 
-These are tasks that I need, will be added as I require more. Add unit tests + mock instead of integration tests
+These are tasks that I need, will be added as I require more
 
 ## Thanks
 

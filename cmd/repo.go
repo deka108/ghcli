@@ -92,7 +92,6 @@ func CreateRepoCommand() *cobra.Command {
 				}
 				fmt.Printf("Repository %s is successfully created\n", name)
 			} else {
-				fmt.Printf("%s already exist", name)
 				return fmt.Errorf("repo %s/%s already exist on GitHub", owner, name)
 			}
 			return nil

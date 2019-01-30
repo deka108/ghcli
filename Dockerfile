@@ -14,6 +14,10 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o /go/bin/ghcli
 
 # final stage
-FROM scratch
+FROM alpine
+RUN apk update \
+    && apk upgrade \
+    && apk add --no-cache ca-certificates \
+    && update-ca-certificates 2>/dev/null || true
 COPY --from=build-env /go/bin/ghcli /go/bin/ghcli
 ENTRYPOINT ["/go/bin/ghcli"]
